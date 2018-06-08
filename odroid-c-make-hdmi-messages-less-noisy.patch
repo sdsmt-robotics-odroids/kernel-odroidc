@@ -1,0 +1,86 @@
+From b9647ed6d3013ff61999715e63de4eabb10ccaf1 Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Thu, 3 Dec 2015 22:00:58 -0800
+Subject: [PATCH] ODROID-C: Make HDMI messages less noisy
+
+---
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_video.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_video.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_video.c
+index a7b438f..c974159 100644
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_video.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_video.c
+@@ -566,11 +566,11 @@ void hdmitx_init_parameters(HDMI_TX_INFO_t *info)
+ static int is_dvi_device(rx_cap_t* pRXCap)
+ {
+ 	if (voutmode_hdmi()) {
+-		pr_emerg("hdmi: Fixing to HDMI Mode\n");
++		hdmi_print(IMP, SYS "Fixing to HDMI Mode");
+ 		return 0;
+ 	}
+ 
+-	pr_emerg("hdmi: fixing to %s mode\n",
++	hdmi_print(IMP, SYS "fixing to %s mode",
+ 			voutmode_dvi() ? "DVI" : "VGA");
+ 	return 1;
+ }
+@@ -595,7 +595,7 @@ int hdmitx_set_display(hdmitx_dev_t* hdmitx_device, HDMI_Video_Codes_t VideoCode
+     }
+ 
+     vic = hdmitx_device->HWOp.GetState(hdmitx_device, STAT_VIDEO_VIC, 0);
+-    hdmi_print(IMP, SYS "already init VIC = %d  Now VIC = %d\n", vic, VideoCode);
++    hdmi_print(IMP, SYS "already init VIC = %d  Now VIC = %d", vic, VideoCode);
+     if((vic != HDMI_Unkown) && (vic == VideoCode)) {
+         hdmitx_device->cur_VIC = vic;
+         return 1;
+@@ -629,30 +629,30 @@ int hdmitx_set_display(hdmitx_dev_t* hdmitx_device, HDMI_Video_Codes_t VideoCode
+ //0: DVI Mode       1: HDMI Mode
+             //if(hdmitx_device->hdmi_info.output_state==CABLE_PLUGIN_DVI_OUT)
+             if(is_dvi_device(&hdmitx_device->RXCap)) {
+-                pr_emerg("hdmi: Sink is DVI device\n");
++                hdmi_print(IMP, SYS "Sink is DVI device");
+                 hdmitx_device->HWOp.CntlConfig(hdmitx_device, CONF_HDMI_DVI_MODE, DVI_MODE);        //todo ColorFormat
+             }
+             else {
+-                pr_emerg("hdmi: Sink is HDMI device\n");
++                hdmi_print(IMP, SYS "Sink is HDMI device");
+                 hdmitx_device->HWOp.CntlConfig(hdmitx_device, CONF_HDMI_DVI_MODE, HDMI_MODE);
+             }
+ //check system status by reading EDID_STATUS
+             switch(hdmitx_device->HWOp.CntlConfig(hdmitx_device, CONF_SYSTEM_ST, 0))
+             {
+                 case 0:
+-                    pr_emerg("hdmi: No sink attached\n");
++                    hdmi_print(IMP, SYS "No sink attached");
+                     break;
+                 case 1:
+-                    pr_emerg("hdmi: Source reading EDID\n");
++                    hdmi_print(IMP, SYS "Source reading EDID");
+                     break;
+                 case 2:
+-                    pr_emerg("hdmi: Source in DVI Mode\n");
++                    hdmi_print(IMP, SYS "Source in DVI Mode");
+                     break;
+                 case 3:
+-                    pr_emerg("hdmi: Source in HDMI Mode\n");
++                    hdmi_print(IMP, SYS "Source in HDMI Mode");
+                     break;
+                 default:
+-                    pr_emerg("hdmi: EDID Status error\n");
++                    hdmi_print(IMP, SYS "EDID Status error");
+             }
+ 
+             hdmi_tx_construct_avi_packet(param, (char*)AVI_DB);
+@@ -751,7 +751,7 @@ static void hdmitx_set_spd_info(hdmitx_dev_t* hdmitx_device)
+         vend_data = hdmitx_device->config_data.vend_data;
+     }
+     else {
+-        hdmi_print(INF, SYS "packet: can\'t get vendor data\n");
++        hdmi_print(INF, SYS "packet: can\'t get vendor data");
+         return;
+     }
+     if(vend_data->vendor_name) {
+-- 
+2.9.5
+

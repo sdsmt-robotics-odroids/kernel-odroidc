@@ -1,2 +1,12 @@
-# This file is intentionally left empty in the stock kernel. Its a nicety
-# added for those wanting to do custom rebuilds with altered config opts.
+CONFIG_AUDITSYSCALL=y
+CONFIG_AUDIT_LOGINUID_IMMUTABLE=y
+
+CONFIG_FANOTIFY=y
+CONFIG_FANOTIFY_ACCESS_PERMISSIONS=y
+
+CONFIG_DEBUG_INFO_VTA=y
+
+# CONFIG_AML_HDMI_TX_NEW_CEC_DRIVER is not set
+
+# CONFIG_USB_MIDI_GADGET is not set
+# CONFIG_USB_G_WEBCAM is not set

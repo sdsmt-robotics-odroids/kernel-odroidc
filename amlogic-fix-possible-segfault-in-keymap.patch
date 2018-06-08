@@ -1,0 +1,25 @@
+From b021bb3d78953e1e84feb49fd3fec579feebba4d Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sun, 1 Mar 2015 06:32:44 -0800
+Subject: [PATCH] amlogic: Fix possible segfault in keymap
+
+---
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c
+index da1d076..f2824d4 100644
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c
+@@ -36,7 +36,7 @@
+ #include <linux/amlogic/hdmi_tx/hdmi_tx_cec.h>
+ hdmitx_dev_t *hdmitx_device = NULL;
+ 
+-__u16 cec_key_map[160] = {
++__u16 cec_key_map[256] = {
+     KEY_ENTER, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 0 , 0 , 0 ,//0x00
+     0 , KEY_HOMEPAGE , KEY_MENU, 0, 0, KEY_BACK, 0, 0,
+     0 , 0, 0, 0, 0, 0, 0, 0,//0x10
+-- 
+2.9.5
+

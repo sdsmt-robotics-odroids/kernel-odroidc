@@ -1,0 +1,46 @@
+From 7089ef3b795f31da0be2bf49825f2e9651be35d6 Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Tue, 3 Mar 2015 00:07:18 -0800
+Subject: [PATCH] amlogic: Expose CEC PHY address over sysfs
+
+---
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_tx.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx.c
+index 51c9b1d..bdb06b6 100755
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx.c
+@@ -584,6 +584,13 @@ static ssize_t show_cec_lang_config(struct device * dev, struct device_attribute
+     return pos;
+ }
+ 
++static ssize_t show_cec_phy_addr(struct device * dev, struct device_attribute *attr, char * buf)
++{
++    int pos=0;
++    pos+=snprintf(buf+pos, PAGE_SIZE, "%hu\n", aml_read_reg32(P_AO_DEBUG_REG1) & 0xFFFF);
++    return pos;
++}
++
+ /*aud_mode attr*/
+ static ssize_t show_aud_mode(struct device * dev, struct device_attribute *attr, char * buf)
+ {
+@@ -977,6 +984,7 @@ static DEVICE_ATTR(cec, S_IWUSR | S_IRUGO, show_cec, store_cec);
+ static DEVICE_ATTR(cec_config, S_IWUSR | S_IRUGO | S_IWGRP, show_cec_config, store_cec_config);
+ //static DEVICE_ATTR(cec_config, S_IWUGO | S_IRUGO , NULL, store_cec_config);
+ static DEVICE_ATTR(cec_lang_config, S_IWUSR | S_IRUGO | S_IWGRP, show_cec_lang_config, store_cec_lang_config);
++static DEVICE_ATTR(cec_phy_addr, S_IRUGO, show_cec_phy_addr, NULL);
+ #else
+ static DEVICE_ATTR(amlogic_cec_debug_config, S_IWUSR | S_IRUGO | S_IWGRP, show_amlogic_cec_debug_config, store_amlogic_cec_debug_config);
+ #endif
+@@ -1619,6 +1627,7 @@ static int amhdmitx_probe(struct platform_device *pdev)
+     ret=device_create_file(hdmitx_dev, &dev_attr_cec);
+     ret=device_create_file(hdmitx_dev, &dev_attr_cec_config);
+     ret=device_create_file(hdmitx_dev, &dev_attr_cec_lang_config);
++    ret=device_create_file(hdmitx_dev, &dev_attr_cec_phy_addr);
+ #else
+     ret=device_create_file(hdmitx_dev, &dev_attr_amlogic_cec_debug_config);
+ #endif
+-- 
+2.9.5
+

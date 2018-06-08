@@ -1,0 +1,44 @@
+From 2d4c9af2570d4aab08b0ee70e49dc595cead5a98 Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sat, 2 May 2015 21:14:54 -0700
+Subject: [PATCH] amlogic: Get TV Vendor ID on CEC Startup
+
+---
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+index 66250dd..47873a4 100755
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+@@ -313,6 +313,9 @@ void cec_node_init(hdmitx_dev_t* hdmitx_device)
+             cec_imageview_on_smp();
+             msleep(100);
+ 
++            cec_device_vendor_id_smp();
++            msleep(100);
++
+             // here, we need to detect whether TV is supporting the CEC function
+             // if not, jump out to save system time
+             //if(!detect_tv_support_cec(player_dev[i])) {
+@@ -802,6 +805,17 @@ void cec_get_menu_language_smp(void)
+     
+ }
+ 
++void cec_device_vendor_id_smp(void)
++{
++    unsigned char msg[2];
++    unsigned char index = cec_global_info.my_node_index;
++
++    msg[0] = ((index & 0xf) << 4) | CEC_TV_ADDR;
++    msg[1] = CEC_OC_GIVE_DEVICE_VENDOR_ID;
++
++    cec_ll_tx(msg, 2);
++}
++
+ void cec_menu_status(cec_rx_message_t* pcec_message)
+ {
+     unsigned char msg[3];
+-- 
+2.9.5
+

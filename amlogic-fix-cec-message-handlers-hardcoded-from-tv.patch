@@ -1,0 +1,43 @@
+From f0d08b79a7c7405246f5eed19b20c27a165eb9db Mon Sep 17 00:00:00 2001
+From: Fedora Kernel Team <kernel-team@fedoraproject.org>
+Date: Wed, 30 May 2018 20:18:04 -0700
+Subject: [PATCH] amlogic: Fix CEC message handlers hardcoded from TV
+
+---
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+index ac9ca76..f579de0 100755
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+@@ -898,6 +898,17 @@ void cec_vendor_id_rx(cec_rx_message_t* pcec_message)
+     cec_global_info.cec_node_info[src_log_addr].vendor_id = (vendor_id_a << 16) | (vendor_id_b << 8) | vendor_id_c;
+ }
+ 
++void cec_power_status_rx(cec_rx_message_t* pcec_message)
++{
++    unsigned char src_log_addr = (pcec_message->content.msg.header >> 4 )&0xf;
++    cec_power_status_e power_status = (cec_power_status_e)pcec_message->content.msg.operands[0];
++
++    cec_global_info.cec_node_info[src_log_addr].power_status = power_status;
++    if(src_log_addr == CEC_TV_ADDR){
++        cec_global_info.tv_power_status = power_status;
++    }
++}
++
+ void cec_active_source_rx(cec_rx_message_t* pcec_message)
+ {
+     unsigned int phy_addr_active;
+@@ -1207,7 +1218,7 @@ void cec_handle_message(cec_rx_message_t* pcec_message)
+         case CEC_OC_REPORT_PHYSICAL_ADDRESS:
+             break;
+         case CEC_OC_REPORT_POWER_STATUS:
+-	    cec_global_info.tv_power_status = pcec_message->content.msg.operands[0];
++	    cec_power_status_rx(pcec_message);
+             break;
+         case CEC_OC_SET_OSD_NAME:
+             break;
+-- 
+2.9.5
+

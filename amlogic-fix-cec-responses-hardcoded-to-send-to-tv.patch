@@ -1,0 +1,50 @@
+From b0bdfa6fe1a943de14b4f30126e24590255e6db1 Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sat, 25 Apr 2015 20:46:28 -0700
+Subject: [PATCH] amlogic: Fix CEC responses hardcoded to send to TV
+
+---
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+index d63e3fe..26ab327 100755
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+@@ -754,8 +754,9 @@ void cec_report_power_status(cec_rx_message_t* pcec_message)
+ {
+     unsigned char index = cec_global_info.my_node_index;
+     unsigned char msg[3];
++    unsigned char src_log_addr = (pcec_message->content.msg.header >> 4 )&0xf;
+ 
+-    msg[0] = ((index & 0xf) << 4) | CEC_TV_ADDR;
++    msg[0] = ((index & 0xf) << 4) | src_log_addr;
+     msg[1] = CEC_OC_REPORT_POWER_STATUS;
+     msg[2] = cec_global_info.cec_node_info[index].power_status;
+     cec_ll_tx(msg, 3);
+@@ -1048,9 +1049,10 @@ void cec_get_version(cec_rx_message_t* pcec_message)
+     unsigned char dest_log_addr = pcec_message->content.msg.header&0xf;
+     unsigned char index = cec_global_info.my_node_index;
+     unsigned char msg[3];
++    unsigned char src_log_addr = (pcec_message->content.msg.header >> 4 )&0xf;
+ 
+     if (0xf != dest_log_addr) {
+-        msg[0] = ((index & 0xf) << 4) | CEC_TV_ADDR;
++        msg[0] = ((index & 0xf) << 4) | src_log_addr;
+         msg[1] = CEC_OC_CEC_VERSION;
+         msg[2] = CEC_VERSION_14A;
+         cec_ll_tx(msg, 3);
+@@ -1061,8 +1063,9 @@ void cec_give_deck_status(cec_rx_message_t* pcec_message)
+ {
+     unsigned char index = cec_global_info.my_node_index;
+     unsigned char msg[3];
++    unsigned char src_log_addr = (pcec_message->content.msg.header >> 4 )&0xf;
+ 
+-    msg[0] = ((index & 0xf) << 4) | CEC_TV_ADDR;
++    msg[0] = ((index & 0xf) << 4) | src_log_addr;
+     msg[1] = CEC_OC_DECK_STATUS;
+     msg[2] = 0x20;
+     cec_ll_tx(msg, 3);
+-- 
+2.9.5
+
