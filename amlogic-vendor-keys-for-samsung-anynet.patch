@@ -1,0 +1,89 @@
+From 30028764e93b741f7888f4e7b785a4429e50dd0a Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sun, 1 Mar 2015 07:56:40 -0800
+Subject: [PATCH] amlogic: Vendor keys for Samsung Anynet+
+
+---
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c    | 4 ++++
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_vendor.c | 7 +++++++
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c     | 4 ++--
+ include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h    | 1 +
+ 4 files changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c
+index 93ac52f..241d11c 100644
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_key.c
+@@ -54,6 +54,10 @@ __u16 cec_key_map[256] = {
+     0 , KEY_MEDIA, 0, 0, KEY_POWER, 0, 0, 0,
+     0 , KEY_BLUE, KEY_RED, KEY_GREEN, KEY_YELLOW, 0, 0, 0,//0x70
+     0 , 0, 0, 0, 0, 0, 0, 0x2fd,
++    0 , 0, 0, 0, 0, 0, 0, 0,//0x80
++    0 , 0, 0, 0, 0, 0, 0, 0,
++    0 , KEY_MENU, 0, 0, 0, 0, KEY_CHANNEL, 0,//0x90
++    0 , 0, 0, 0, 0, 0, 0, 0,
+ };
+ 
+ void cec_send_event(cec_rx_message_t* pcec_message)
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_vendor.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_vendor.c
+index 13b9fe8..a3a8c9e 100644
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_vendor.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_cec_vendor.c
+@@ -11,6 +11,10 @@ void cec_vendor_remote_btn_down_irq(void)
+     if(initiator != 0xf)
+     {
+         switch(cec_global_info.cec_node_info[initiator].vendor_id) {
++            case CEC_VENDOR_SAMSUNG:
++                cec_user_control_pressed_irq();
++                cec_user_control_released_irq(); // Samsung doesn't send a button-up
++                break;
+             case CEC_VENDOR_UNKNOWN:
+             default:
+                 break;
+@@ -25,6 +29,9 @@ void cec_vendor_remote_btn_up_irq(void)
+     if(initiator != 0xf)
+     {
+         switch(cec_global_info.cec_node_info[initiator].vendor_id) {
++            case CEC_VENDOR_SAMSUNG:
++                cec_user_control_released_irq();
++                break;
+             case CEC_VENDOR_UNKNOWN:
+             default:
+                 break;
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+index 26ab327..632dde0 100755
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+@@ -457,7 +457,7 @@ void cec_input_handle_message(void)
+                 initiator = cec_global_info.cec_rx_msg_buf.cec_rx_message[cec_global_info.cec_rx_msg_buf.rx_write_pos].content.msg.header & 0xf0;
+                 if(opernum > 15 || follower == 0xf) break;
+             }
+-            cec_vendor_remote_btn_up_irq();
++            cec_vendor_remote_btn_down_irq();
+             break;
+         case CEC_OC_VENDOR_REMOTE_BUTTON_UP:
+             // check valid msg
+@@ -468,7 +468,7 @@ void cec_input_handle_message(void)
+                 follower = cec_global_info.cec_rx_msg_buf.cec_rx_message[cec_global_info.cec_rx_msg_buf.rx_write_pos].content.msg.header & 0x0f;
+                 if(opernum != 0 || follower == 0xf) break;
+             }
+-            cec_vendor_remote_btn_down_irq();
++            cec_vendor_remote_btn_up_irq();
+             break;
+         default:
+             break;
+diff --git a/include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h b/include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h
+index f28d560..1816619 100644
+--- a/include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h
++++ b/include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h
+@@ -498,6 +498,7 @@ typedef enum {
+ 
+ typedef enum {
+     CEC_VENDOR_UNKNOWN = 0,
++    CEC_VENDOR_SAMSUNG = 0x0000F0,
+ } cec_vendor_id_e;
+ 
+ void cec_enable_irq(void);
+-- 
+2.9.5
+

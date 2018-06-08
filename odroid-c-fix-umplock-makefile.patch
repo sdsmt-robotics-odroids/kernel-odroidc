@@ -1,0 +1,42 @@
+From 95817cd91cb9b91a065ed8a841b101d6c8b9ab73 Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Thu, 3 Dec 2015 00:53:43 -0800
+Subject: [PATCH] ODROID-C: Fix umplock makefile
+
+---
+ drivers/gpu/arm/umplock/Makefile | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/arm/umplock/Makefile b/drivers/gpu/arm/umplock/Makefile
+index 62593fc..d815597 100755
+--- a/drivers/gpu/arm/umplock/Makefile
++++ b/drivers/gpu/arm/umplock/Makefile
+@@ -16,13 +16,15 @@ ARCH ?= $(shell uname -m)
+ ifneq ($(KERNELRELEASE),)
+ # Inside the kernel build system
+ 
++ifneq ($(KBUILD_EXTMOD),)
+ EXTRA_CFLAGS += -I$(KBUILD_EXTMOD)
++endif
+ 
+ SRC =	umplock_driver.c
+ 
+ MODULE:=umplock.ko
+ 
+-obj-m := $(MODULE:.ko=.o)
++obj-$(CONFIG_UMPLOCK) := $(MODULE:.ko=.o)
+ $(MODULE:.ko=-y) := $(SRC:.c=.o)
+ 
+ $(MODULE:.ko=-objs) := $(SRC:.c=.o) 
+@@ -58,7 +60,7 @@ $(error No KDIR found for platform $(CPU))
+ endif
+ 
+ all:
+-	$(MAKE) ARCH=$(ARCH) -C $(KDIR) M=$(CURDIR)
++	$(MAKE) ARCH=$(ARCH) -C $(KDIR) M=$(CURDIR) CONFIG_UMPLOCK=m
+ 
+ kernelrelease:
+ 	$(MAKE) -C $(KDIR) kernelrelease
+-- 
+2.9.5
+

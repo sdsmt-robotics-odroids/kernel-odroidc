@@ -1,0 +1,45 @@
+From 8c181c4ce2b90aa0fd06a8ebd1252683d3c4c62f Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sun, 6 Dec 2015 21:54:14 -0800
+Subject: [PATCH] ODROID-C: Quiet some more rowdy kernel messages
+
+These messages aren't errors, they're debug messages left on.
+
+diff --git a/arch/arm/mach-meson8b/time.c b/arch/arm/mach-meson8b/time.c
+index 74be12c..c1880c6 100644
+--- a/arch/arm/mach-meson8b/time.c
++++ b/arch/arm/mach-meson8b/time.c
+@@ -436,7 +436,7 @@ static void __init meson_timer_setup(struct clock_event_device *evt, struct meso
+     		|(TIMER_RESOLUTION_1us << clk->bit_resolution)) );
+     aml_write_reg32(clk->reg, 9999);
+     meson_timer_init_device(&clk->clockevent);
+-    printk(KERN_ERR"Global timer: %s (%p) initialized\n",clk->clockevent.name,clk);
++    printk(KERN_DEBUG"Global timer: %s (%p) initialized\n",clk->clockevent.name,clk);
+ 
+     clk->irq.dev_id=&clk->clockevent;
+     clk->clockevent.private = (void *)clk;
+diff --git a/drivers/mmc/core/mmc.c b/drivers/mmc/core/mmc.c
+index 297fb2d..5251afe 100644
+--- a/drivers/mmc/core/mmc.c
++++ b/drivers/mmc/core/mmc.c
+@@ -502,7 +502,7 @@ static int mmc_read_ext_csd(struct mmc_card *card, u8 *ext_csd)
+         
+         if ((card->ext_csd.rst_n_function & EXT_CSD_RST_N_EN_MASK) != EXT_CSD_RST_N_ENABLED){
+ 
+-            pr_err("Enable hw reset function here, only once, rst_n_function:%d\n", card->ext_csd.rst_n_function);
++            pr_info("Enable hw reset function here, only once, rst_n_function:%d\n", card->ext_csd.rst_n_function);
+             //add enable hw reset function here, only run once for eMMC            
+             err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_RST_N_FUNCTION,
+                     EXT_CSD_RST_N_ENABLED,
+@@ -516,7 +516,7 @@ static int mmc_read_ext_csd(struct mmc_card *card, u8 *ext_csd)
+             }
+         }
+         else{
+-            pr_err("###check hw reset function is already enabled here\n");          
++            pr_info("###check hw reset function is already enabled here\n");
+ 
+         }
+ 
+-- 
+2.9.5
+

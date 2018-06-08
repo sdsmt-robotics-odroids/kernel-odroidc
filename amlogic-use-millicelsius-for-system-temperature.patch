@@ -1,0 +1,109 @@
+From 15c2c220ee4e99c7bb569674e36b4e10133ccd0a Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sat, 2 May 2015 21:29:20 -0700
+Subject: [PATCH] amlogic: Use millicelsius for system temperature
+
+---
+ arch/arm/mach-meson8b/thermal.c           |  2 +-
+ drivers/amlogic/thermal/amlogic_thermal.c | 18 +++++++++---------
+ drivers/thermal/thermal_core.c            |  9 +--------
+ 3 files changed, 11 insertions(+), 18 deletions(-)
+
+diff --git a/arch/arm/mach-meson8b/thermal.c b/arch/arm/mach-meson8b/thermal.c
+index f17da11..d53cc4b 100644
+--- a/arch/arm/mach-meson8b/thermal.c
++++ b/arch/arm/mach-meson8b/thermal.c
+@@ -65,7 +65,7 @@ int get_cpu_temp(void)
+ 	if(temps->flag){
+ 		ret=get_adc_sample(6);
+ 		if(ret>=0){
+-			tempa=(10*(ret-temps->adc_efuse))/32+27;
++			tempa=(10000*(ret-temps->adc_efuse))/32+27000;
+ 			ret=tempa;
+ 		}
+ 	}
+diff --git a/drivers/amlogic/thermal/amlogic_thermal.c b/drivers/amlogic/thermal/amlogic_thermal.c
+index d685c65..9edae97 100644
+--- a/drivers/amlogic/thermal/amlogic_thermal.c
++++ b/drivers/amlogic/thermal/amlogic_thermal.c
+@@ -644,21 +644,21 @@ static unsigned long aml_cal_virtual_temp(void)
+ #endif
+ 
+ /* Get temperature callback functions for thermal zone */
+-int aa=50;
++int aa=50000;
+ int trend=1;
+ static int amlogic_get_temp(struct thermal_zone_device *thermal,
+ 			unsigned long *temp)
+ {
+ #if 0
+-	if(aa>=100)
++	if(aa>=100000)
+ 		trend=1;
+-	else if (aa<=40)
++	else if (aa<=40000)
+ 		trend=0;
+ 	
+ 	if(trend)
+-		aa=aa-5;
++		aa=aa-5000;
+ 	else
+-		aa=aa+5;
++		aa=aa+5000;
+ 	//get_random_bytes(&aa,4);
+ 	printk("========  temp=%d\n",aa);
+ 	*temp=aa;
+@@ -667,9 +667,9 @@ static int amlogic_get_temp(struct thermal_zone_device *thermal,
+     if (trim_flag) { 
+ 	    *temp = (unsigned long)get_cpu_temp();
+     } else if (virtual_thermal_en) {
+-	    *temp = aml_cal_virtual_temp(); 
++	    *temp = aml_cal_virtual_temp() * 1000;
+     } else {
+-        *temp = 45;                     // fix cpu temperature to 45 if not trimed && disable virtual thermal    
++        *temp = 45000;                  // fix cpu temperature to 45 if not trimed && disable virtual thermal
+     }
+ #else
+ 	*temp = (unsigned long)get_cpu_temp();
+@@ -865,8 +865,8 @@ static struct amlogic_thermal_platform_data * amlogic_thermal_init_from_dts(stru
+ 		}
+ 		descend=get_desend();
+ 		for (i = 0; i < pdata->temp_trip_count; i++) {
+-			printk("temperature=%d on trip point=%d\n",tmp_level[i].temperature,i);
+-			pdata->tmp_trip[i].temperature=tmp_level[i].temperature;
++			printk("temperature=%d on trip point=%d\n",tmp_level[i].temperature * 1000,i);
++			pdata->tmp_trip[i].temperature=tmp_level[i].temperature * 1000;
+ 			printk("fixing high_freq=%d to ",tmp_level[i].cpu_high_freq);
+ 			tmp_level[i].cpu_high_freq=fix_to_freq(tmp_level[i].cpu_high_freq,descend);
+ 			pdata->tmp_trip[i].cpu_lower_level=cpufreq_cooling_get_level(0,tmp_level[i].cpu_high_freq);
+diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core.c
+index bdbce5c..69d1861 100644
+--- a/drivers/thermal/thermal_core.c
++++ b/drivers/thermal/thermal_core.c
+@@ -347,7 +347,7 @@ static void handle_critical_trips(struct thermal_zone_device *tz,
+ 	if (trip_type == THERMAL_TRIP_CRITICAL) {
+ 		dev_emerg(&tz->device,
+ 			  "critical temperature reached(%d C),shutting down\n",
+-			  tz->temperature);
++			  tz->temperature / 1000);
+ 		orderly_poweroff(true);
+ 	}
+ }
+@@ -481,14 +481,7 @@ temp_show(struct device *dev, struct device_attribute *attr, char *buf)
+ 	if (ret)
+ 		return ret;
+ 
+-#if defined(CONFIG_MACH_MESON8B_ODROIDC)
+-        /* Fake workaround to return the temperature
+-         * as millidegree Celsius
+-         */
+-	return sprintf(buf, "%ld\n", temperature * 1000);
+-#else
+ 	return sprintf(buf, "%ld\n", temperature);
+-#endif
+ }
+ 
+ static ssize_t
+-- 
+2.9.5
+

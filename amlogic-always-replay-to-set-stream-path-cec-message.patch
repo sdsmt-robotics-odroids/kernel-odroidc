@@ -1,0 +1,72 @@
+From 1e6b4fcf9c8fd60e27fbdae734f39096974a0cb3 Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sat, 2 May 2015 16:00:17 -0700
+Subject: [PATCH] amlogic: Always reply to 'Set Stream Path' CEC message
+
+---
+ drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+index df3dab3..946bcfa 100755
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+@@ -135,9 +135,11 @@ static void hdmitx_cec_late_resume(struct early_suspend *h)
+     if(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) {
+         cec_hw_reset();//for M8 CEC standby.
+         cec_imageview_on_smp();
+-        cec_active_source_smp();
+-        msleep(200);
+-        cec_active_source_smp();
++        if(hdmitx_device->cec_func_config & (1 << ONE_TOUCH_PLAY_MASK)) {
++            cec_active_source_smp();
++            msleep(200);
++            cec_active_source_smp();
++        }
+         cec_menu_status_smp(DEVICE_MENU_ACTIVE);
+     }
+     hdmi_print(INF, CEC "late resume\n");
+@@ -324,7 +326,9 @@ void cec_node_init(hdmitx_dev_t* hdmitx_device)
+             cec_get_menu_language_smp();
+             msleep(350);
+ 
+-            cec_active_source_smp();
++            if(hdmitx_device->cec_func_config & (1 << ONE_TOUCH_PLAY_MASK)) {
++                cec_active_source_smp();
++            }
+             msleep(120);
+ 
+             cec_menu_status_smp(DEVICE_MENU_ACTIVE);
+@@ -915,13 +919,11 @@ void cec_active_source_smp(void)
+     unsigned char phy_addr_cd = aml_read_reg32(P_AO_DEBUG_REG1) & 0xff;      
+ 
+     if(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) {
+-        if(hdmitx_device->cec_func_config & (1 << ONE_TOUCH_PLAY_MASK)) {
+-            msg[0] = ((index & 0xf) << 4) | CEC_BROADCAST_ADDR;
+-            msg[1] = CEC_OC_ACTIVE_SOURCE;
+-            msg[2] = phy_addr_ab;
+-            msg[3] = phy_addr_cd;
+-            cec_ll_tx(msg, 4);
+-        }
++        msg[0] = ((index & 0xf) << 4) | CEC_BROADCAST_ADDR;
++        msg[1] = CEC_OC_ACTIVE_SOURCE;
++        msg[2] = phy_addr_ab;
++        msg[3] = phy_addr_cd;
++        cec_ll_tx(msg, 4);
+     }
+     cec_global_info.cec_node_info[cec_global_info.my_node_index].menu_status = DEVICE_MENU_ACTIVE;
+ }
+@@ -1830,7 +1832,9 @@ void cec_usrcmd_set_config(const char * buf, size_t count)
+         cec_menu_status_smp(DEVICE_MENU_INACTIVE);
+     }
+     if((1 == (param[0] & 1)) && (0x0 == (value & 0x2)) && (0x2 == (param[0] & 0x2))){
+-        cec_active_source_smp();
++        if(hdmitx_device->cec_func_config & (1 << ONE_TOUCH_PLAY_MASK)) {
++            cec_active_source_smp();
++        }
+     }
+     if((0x20 == (param[0] & 0x20)) && (0x0 == (value & 0x20)) ){
+         cec_get_menu_language_smp();
+-- 
+2.9.5
+

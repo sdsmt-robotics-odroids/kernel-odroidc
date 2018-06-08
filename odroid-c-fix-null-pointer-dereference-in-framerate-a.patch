@@ -1,0 +1,33 @@
+From a2bc6b65de5de25293fb8393a82a227070cbcb50 Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sun, 6 Dec 2015 01:42:44 -0800
+Subject: [PATCH] ODROID-C: Fix null pointer dereference in framerate
+ automation
+
+If the user never specified a specific framereate, but the automation is ending,
+just leave the vmode as-is because we don't know what to switch back to
+---
+ drivers/amlogic/display/vout/tvconf.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/amlogic/display/vout/tvconf.c b/drivers/amlogic/display/vout/tvconf.c
+index 2c2df60..006f9ca 100644
+--- a/drivers/amlogic/display/vout/tvconf.c
++++ b/drivers/amlogic/display/vout/tvconf.c
+@@ -1131,6 +1131,13 @@ static int tv_set_vframe_rate_end_hint(void)
+ {
+ #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+ 
++	if( mode_by_user == VMODE_INIT_NULL )
++	{
++		printk("vout [%s] no mode_by_user to return to, policy = %d!\n ", __FUNCTION__, fr_auto_policy);
++
++		return 0;
++	}
++
+ 	printk("vout [%s] return mode = %d, policy = %d!\n", __FUNCTION__, mode_by_user, fr_auto_policy);
+ 	if( fr_auto_policy != 0 )
+ 	{
+-- 
+2.9.5
+

@@ -1,0 +1,50 @@
+From a2939dd179355d77f8d5716b97b9d8924c2647ff Mon Sep 17 00:00:00 2001
+From: Scott K Logan <logans@cottsay.net>
+Date: Sat, 2 May 2015 21:50:48 -0700
+Subject: [PATCH] amlogic: Record device vendor IDs
+
+
+diff --git a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+index f571393..66250dd 100755
+--- a/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
++++ b/drivers/amlogic/hdmi/hdmi_tx/hdmi_tx_cec.c
+@@ -844,6 +844,16 @@ void cec_menu_status_smp_irq(cec_rx_message_t* pcec_message)
+     }
+ }
+ 
++void cec_vendor_id_rx(cec_rx_message_t* pcec_message)
++{
++    unsigned char src_log_addr = (pcec_message->content.msg.header >> 4 )&0xf;
++    unsigned char vendor_id_a = pcec_message->content.msg.operands[0];
++    unsigned char vendor_id_b = pcec_message->content.msg.operands[1];
++    unsigned char vendor_id_c = pcec_message->content.msg.operands[2];
++
++    cec_global_info.cec_node_info[src_log_addr].vendor_id = (vendor_id_a << 16) | (vendor_id_b << 8) | vendor_id_c;
++}
++
+ void cec_active_source_rx(cec_rx_message_t* pcec_message)
+ {
+     unsigned int phy_addr_active;
+@@ -1137,6 +1147,7 @@ void cec_handle_message(cec_rx_message_t* pcec_message)
+         case CEC_OC_DECK_STATUS:
+             break;
+         case CEC_OC_DEVICE_VENDOR_ID:
++            cec_vendor_id_rx(pcec_message);
+             break;
+         case CEC_OC_FEATURE_ABORT:
+             break;
+diff --git a/include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h b/include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h
+index 4fa6f29..3434031 100644
+--- a/include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h
++++ b/include/linux/amlogic/hdmi_tx/hdmi_tx_cec.h
+@@ -563,6 +563,7 @@ void cec_menu_status_smp(cec_device_menu_state_e status);
+ void cec_set_imageview_on_irq(void);
+ void cec_active_source_irq(void);
+ 
++void cec_vendor_id_rx(cec_rx_message_t* pcec_message);
+ void cec_report_physical_address_smp(void);
+ void cec_imageview_on_smp(void);
+ void cec_active_source_smp(void);
+-- 
+2.9.5
+
